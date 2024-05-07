@@ -1,0 +1,79 @@
+---
+title: "GroupProject5523"
+author: "Lingyun Zhou"
+date: "2024-03-17"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data = read.csv("C:/Users/16082/OneDrive/desktop/CSCI5523/grpproj/Big_Table.csv")
+head(data)
+set.seed(5523)
+#sample_data <- data[sample(nrow(data), size = 1000),]
+```
+
+```{r}
+# Column names you want to remove
+columns_to_remove <- c("Squad", "League", "Season", "Total.Cmp.", "Total.TotDist", "Total.PrgDist", "Total.Cmp", "Total.Att", "Unnamed..2_level_0.90s_x", "GCA.GCA", "GCA.GCA90", "GCA.Types.PassLive", "GCA.Types.PassDead", "GCA.Types.TO", "GCA.Types.Sh", "GCA.Types.Fld", "GCA.Types.Def", "Unnamed..1_level_0...Pl_x", "Unnamed..2_level_0.90s_y", "Tackles.Tkl", "Challenges.Tkl", "Challenges.Att", "Challenges.Tkl.", "Challenges.Lost", "Unnamed..1_level_0...Pl_y", "Unnamed..2_level_0.90s", "Standard.Sh", "Standard.SoT.", "Blocks.Blocks", "Standard.Sh.90", "Standard.SoT.90", "Standard.G.Sh", "Standard.G.SoT", "Standard.Dist", "W", "D", "L", "Unnamed..3_level_0.90s", "Touches.Live", "Take.Ons.Att", "Take.Ons.Succ", "Take.Ons.Succ.", "Take.Ons.Tkld", "Take.Ons.Tkld.", "Carries.Carries", "Carries.Dis")
+
+# Use the 'select' function from the dplyr package
+library(dplyr)
+
+# Create a new data frame without the columns_to_remove
+new_data <- data %>% select(-all_of(columns_to_remove))
+
+cor_matrix <- cor(new_data)
+# Find pairs with high correlation
+high_cor_pairs <- which(abs(cor_matrix) > 0.8, arr.ind = TRUE)
+
+
+## PCA
+pca_result <- prcomp(new_data, scale. = TRUE)
+summary(pca_result)
+#plot(pca_result$x[, 1:2])  # Plot the first two principal components
+```
+
+```{r}
+#Plot the first numeric column against all others
+library(ggplot2)
+
+## Box-Plot
+# Create a function to plot a single boxplot for a given column
+plot_boxplot <- function(column_name, new_data) {
+  p <- ggplot(new_data, aes_string(y = column_name)) + 
+    geom_boxplot() +
+    labs(title = paste("Boxplot for", column_name), y = column_name) +
+    theme_minimal()
+  
+  #ggsave(filename = paste("boxplot_", column_name, ".png", sep = ""), plot = p, width = 4, height = 3)
+  
+  print(p)  # Print the boxplot
+}
+
+# Now loop through all columns and create a boxplot for each
+for (col_name in names(new_data)) {
+  plot_boxplot(col_name, new_data)
+}
+
+
+## Scatter Plots
+# Find the numeric columns
+numeric_cols <- sapply(new_data, is.numeric)
+
+# Extracting the names of the numeric columns
+numeric_col_names <- names(new_data)[numeric_cols]
+
+# Using a loop to create scatter plots
+for (col_name in numeric_col_names[-1]) {  # Skipping the first column since we're using it as the x-axis
+  p <- ggplot(new_data, aes_string(x = numeric_col_names[1], y = col_name)) +
+    geom_point() +
+    theme_minimal() +
+    ggtitle(paste("Scatter plot of", numeric_col_names[1], "vs", col_name))
+  
+  print(p)  # Plot the object
+}
+```
